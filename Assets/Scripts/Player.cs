@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
     [SerializeField] float slowGravityScale;
     [SerializeField] GameObject freezeProjectile;
     [SerializeField] AudioClip rewindSFX;
+    [SerializeField] Transform grabSocket;
+    [SerializeField] Transform projectileSpawn;
 
     State state;
     Rewindable lastRewindable;
@@ -18,6 +20,7 @@ public class Player : MonoBehaviour
     Rigidbody2D rb;
     float jumpForce;
     AudioSource source;
+    Grabbable grabbing;
 
     
     // Start is called before the first frame update
@@ -38,12 +41,12 @@ public class Player : MonoBehaviour
     }
     void LaunchFreeze(){
 
-        var projectile = Instantiate(freezeProjectile,transform.position, transform.rotation);
+        var projectile = Instantiate(freezeProjectile,projectileSpawn.position, transform.rotation);
         GameManager.instance.cameraController.SetTarget(projectile.transform, true);
 
         var projScript = projectile.GetComponent<GuidedProjectile>();
 
-        projScript.Initialize(CheckRewindable, ReturnControl);
+        projScript.Initialize(CheckRewindable, ReturnControl, KeyCode.E);
 
         rb.velocity = Vector2.zero;
         rb.gravityScale = slowGravityScale;
@@ -67,6 +70,10 @@ public class Player : MonoBehaviour
             Jump();
         }
         var hor = Input.GetAxisRaw("Horizontal");
+        if(hor != 0){
+            var scale = transform.localScale;
+            transform.localScale = new Vector3 (hor * Mathf.Abs(scale.x) ,scale.y,scale.z);
+        }       
         Walk(hor);
     }
 
@@ -76,10 +83,9 @@ public class Player : MonoBehaviour
 
     }
 
-    IEnumerator Rewind(){
+    void Rewind(){
         if(lastRewindable != null){
             source.PlayOneShot(rewindSFX);
-            yield return new WaitForSeconds(0.2f);
             lastRewindable.Rewind();
         }
         
@@ -90,8 +96,51 @@ public class Player : MonoBehaviour
             LaunchFreeze();
         }
         if(Input.GetKeyDown(KeyCode.R)){
-            StartCoroutine(Rewind());
+            Rewind();
         }
+
+        if(Input.GetKeyDown(KeyCode.G)){
+            if(grabbing != null){
+                grabbing.Throw();
+            }else{
+                CheckForGrabbables();
+            }
+            
+        }
+    }
+
+    void CheckForGrabbables(){
+        int notPlayerLayer = ~(1 << 8);
+        var front = Physics2D.Raycast(transform.position,transform.TransformDirection(Vector2.right),2f, notPlayerLayer);
+        if(front.collider != null){
+            var grabbable = front.transform.GetComponent<Grabbable>();
+            if(grabbable){
+                grabbable.Grab(grabSocket);
+                grabbing = grabbable;
+                grabbing.onRelease.AddListener(()=>grabbing = null);
+                grabbing.onThrow.AddListener(()=>grabbing = null);
+                return;
+            }
+        }
+        var down = Physics2D.Raycast(transform.position,-transform.up,2f, notPlayerLayer);
+        if(down.collider != null){
+            var grabbable = down.transform.GetComponent<Grabbable>();
+            if(grabbable){
+                grabbable.Grab(grabSocket);
+                grabbing = grabbable;
+                grabbing.onRelease.AddListener(()=>grabbing = null);
+                grabbing.onThrow.AddListener(()=>grabbing = null);
+                return;
+            }
+        }
+
+  
+    }
+    
+    void OnDrawGizmosSelected(){
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(new Ray(transform.position, transform.TransformDirection(Vector2.right) * 2f));
+        Gizmos.DrawRay(new Ray(transform.position, -transform.up * 2f));
     }
 
     // Update is called once per frame
@@ -100,6 +149,7 @@ public class Player : MonoBehaviour
         if(state == State.Normal){
             Movement();
             Attack();
-        }       
+        }
+        
     }
 }

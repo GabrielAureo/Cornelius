@@ -13,6 +13,7 @@ public abstract class GuidedProjectile : MonoBehaviour{
     protected UnityAction destroyAction;
     protected UnityAction<MonoBehaviour> effectAction;
     protected float timer;
+    protected KeyCode selfDestroyKey;
 
     /// <summary>
     /// Method to initialize all the needed references and launch the projectile
@@ -20,10 +21,11 @@ public abstract class GuidedProjectile : MonoBehaviour{
     /// <param name="onEffect">Callback to when the projectile hits a target and apply some effect</param>
     /// <param name="onDestroy">Callback to when the projectile is destroyed</param>
 
-    public void Initialize(UnityAction<MonoBehaviour> onEffect, UnityAction onDestroy){
+    public void Initialize(UnityAction<MonoBehaviour> onEffect, UnityAction onDestroy, KeyCode selfDestroyKey){
         rb = GetComponent<Rigidbody2D>();
         effectAction = onEffect;
         destroyAction = onDestroy;
+        this.selfDestroyKey = selfDestroyKey;
         onInitialize();
     }
 
@@ -47,6 +49,9 @@ public abstract class GuidedProjectile : MonoBehaviour{
         timer += Time.deltaTime;
         onUpdate();
         if(timer >= duration){
+            Destruction();
+        }
+        if(selfDestroyKey != KeyCode.None && Input.GetKeyDown(selfDestroyKey)){
             Destruction();
         }
 

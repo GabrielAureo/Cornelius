@@ -4,21 +4,29 @@ using System.Collections;
 using DG.Tweening;
 
 [RequireComponent(typeof(Collider2D))]
-public class Freezable : MonoBehaviour, Rewindable{
+public class Freezable : Affectable, Rewindable{
+    public bool isAffectable;
     [SerializeField] float duration;
     [SerializeField] public FreezeEvent onFreeze;
     [SerializeField] public UnityEvent onUnfreeze;
     Coroutine TimerRoutine;
-
-
     bool paused;
     float timer;
 
-    public void Rewind(){
-        Unfreeze();
+    public override void SetAffectable(bool enabled){
+        isAffectable = enabled;
     }
-    public void Freeze(){
-        StartCoroutine(StartFreeze());
+
+    public void Rewind(){
+        Dispel();
+    }
+    public bool Freeze(){
+        if(isAffectable){
+            StartCoroutine(StartFreeze());
+            return true;
+        }
+        return false;
+        
     }
     public IEnumerator StartFreeze(){
         if(TimerRoutine != null){
@@ -30,13 +38,12 @@ public class Freezable : MonoBehaviour, Rewindable{
 
     IEnumerator UnfreezeTimer(){
         timer = 0;
-        if(!paused){
-            while(timer <= duration){
-                timer += Time.deltaTime;
-                yield return null;
-            }
+        
+        while(timer <= duration){
+            if(!paused) timer += Time.deltaTime;
+            yield return null;
         }
-        Unfreeze();
+        Dispel();
     }
 
     public void PauseTimer(){
@@ -46,8 +53,10 @@ public class Freezable : MonoBehaviour, Rewindable{
         paused = false;
     }
     
-   public void Unfreeze(){
+   public override bool Dispel(){
+        if(TimerRoutine != null) StopCoroutine(TimerRoutine);
         onUnfreeze.Invoke();
+        return true;
     }
 }
 
