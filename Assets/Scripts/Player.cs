@@ -18,6 +18,7 @@ public class Player : MonoBehaviour
     Rewindable lastRewindable;
     float defaultGravityScale;
     Rigidbody2D rb;
+    Animator anim;
     float jumpForce;
     AudioSource source;
     Grabbable grabbing;
@@ -29,6 +30,7 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         source = GetComponent<AudioSource>();
         jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
+        anim = GetComponentInChildren<Animator>();
         defaultGravityScale = rb.gravityScale;
     }
 
@@ -38,6 +40,7 @@ public class Player : MonoBehaviour
     }
     void Walk(float direction){
         rb.velocity = new Vector2(walkSpeed * direction, rb.velocity.y);
+        anim.SetFloat("speed", Mathf.Abs(rb.velocity.x));
     }
     void LaunchFreeze(){
 
