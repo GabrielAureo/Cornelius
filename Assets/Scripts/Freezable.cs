@@ -12,9 +12,14 @@ public class Freezable : Affectable, Rewindable{
     Coroutine TimerRoutine;
     bool paused;
     float timer;
+    bool active;
 
     public override void SetAffectable(bool enabled){
         isAffectable = enabled;
+    }
+
+    public bool isActive(){
+        return active;
     }
 
     public void Rewind(){
@@ -23,6 +28,7 @@ public class Freezable : Affectable, Rewindable{
     public bool Freeze(){
         if(isAffectable){
             StartCoroutine(StartFreeze());
+            active = true;
             return true;
         }
         return false;
@@ -56,6 +62,7 @@ public class Freezable : Affectable, Rewindable{
    public override bool Dispel(){
         if(TimerRoutine != null) StopCoroutine(TimerRoutine);
         onUnfreeze.Invoke();
+        active = false;
         return true;
     }
 }

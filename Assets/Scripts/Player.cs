@@ -14,6 +14,8 @@ public class Player : MonoBehaviour
     [SerializeField] Transform grabSocket;
     [SerializeField] Transform projectileSpawn;
 
+    bool canJump = true;
+
     State state;
     Rewindable lastRewindable;
     float defaultGravityScale;
@@ -23,20 +25,24 @@ public class Player : MonoBehaviour
     AudioSource source;
     Grabbable grabbing;
 
+    void OnValidate(){
+        if(rb== null) rb = GetComponent<Rigidbody2D>();
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
+    }
     
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         source = GetComponent<AudioSource>();
-        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
         anim = GetComponentInChildren<Animator>();
         defaultGravityScale = rb.gravityScale;
     }
 
-    void Jump(){
+    public void Jump(){
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.AddForce(jumpForce * Vector2.up, ForceMode2D.Impulse);
+        canJump = false;
     }
     void Walk(float direction){
         rb.velocity = new Vector2(walkSpeed * direction, rb.velocity.y);
@@ -69,7 +75,7 @@ public class Player : MonoBehaviour
     }
 
     void Movement(){
-        if(Input.GetKeyDown(KeyCode.W)){
+        if(Input.GetKeyDown(KeyCode.Space) && canJump){
             Jump();
         }
         var hor = Input.GetAxisRaw("Horizontal");
@@ -88,6 +94,10 @@ public class Player : MonoBehaviour
 
     void Rewind(){
         if(lastRewindable != null){
+            if(!lastRewindable.isActive()){
+                lastRewindable = null;
+                return;
+            }
             source.PlayOneShot(rewindSFX);
             lastRewindable.Rewind();
         }
@@ -102,21 +112,24 @@ public class Player : MonoBehaviour
             Rewind();
         }
 
-        if(Input.GetKeyDown(KeyCode.G)){
+        if(Input.GetKeyDown(KeyCode.LeftShift)){
             if(grabbing != null){
                 grabbing.Throw();
             }else{
-                CheckForGrabbables();
+                CheckForGrabbables(Vector2.down);
             }
             
         }
     }
+    public void AllowJump(){
+        canJump = true;
+    }
 
-    void CheckForGrabbables(){
+    void CheckForGrabbables(Vector2 direction){
         int notPlayerLayer = ~(1 << 8);
-        var front = Physics2D.Raycast(transform.position,transform.TransformDirection(Vector2.right),2f, notPlayerLayer);
-        if(front.collider != null){
-            var grabbable = front.transform.GetComponent<Grabbable>();
+        var hit = Physics2D.Raycast(transform.position,transform.TransformDirection(direction),2f, notPlayerLayer);
+        if(hit.collider != null){
+            var grabbable = hit.transform.GetComponent<Grabbable>();
             if(grabbable){
                 grabbable.Grab(grabSocket);
                 grabbing = grabbable;
@@ -125,7 +138,7 @@ public class Player : MonoBehaviour
                 return;
             }
         }
-        var down = Physics2D.Raycast(transform.position,-transform.up,2f, notPlayerLayer);
+        /*var down = Physics2D.Raycast(transform.position,-transform.up,2f, notPlayerLayer);
         if(down.collider != null){
             var grabbable = down.transform.GetComponent<Grabbable>();
             if(grabbable){
@@ -135,9 +148,7 @@ public class Player : MonoBehaviour
                 grabbing.onThrow.AddListener(()=>grabbing = null);
                 return;
             }
-        }
-
-  
+        }  */
     }
     
     void OnDrawGizmosSelected(){
@@ -152,6 +163,23 @@ public class Player : MonoBehaviour
         if(state == State.Normal){
             Movement();
             Attack();
+        }
+        
+    }
+
+    void OnCollisionEnter2D(Collision2D coll){
+        if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
+            //collision from bellow
+            if(coll.gameObject.tag == "Ground" && coll.enabled){
+                canJump = true;
+            
+            }else{
+                var stompable = coll.gameObject.GetComponent<Stompable>();
+                if(stompable != null){
+                Jump();
+                stompable.Stomp();
+                }
+            }
         }
         
     }

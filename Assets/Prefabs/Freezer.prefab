@@ -29,7 +29,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4692705075806299562}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.68, y: -8.81, z: -0.19837357}
+  m_LocalPosition: {x: -2.13, y: -6.1, z: -0.19837357}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -147,9 +147,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f74a6d441526202439ddf0b914f51af0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  duration: 10
   launchSpeed: 5
   speed: 50
-  duration: 10
   cameraSettings:
     offset: {x: 0, y: 0, z: 0}
     size: 15
@@ -208,8 +208,8 @@ TrailRenderer:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.5286591
-        value: 0.79616773
+        time: 0.58128667
+        value: 0.8043655
         inSlope: -1.3767785
         outSlope: -1.3767785
         tangentMode: 0
@@ -218,7 +218,7 @@ TrailRenderer:
         outWeight: 0.20564513
       - serializedVersion: 3
         time: 1
-        value: 0.3046875
+        value: 0
         inSlope: 0
         outSlope: 0
         tangentMode: 0

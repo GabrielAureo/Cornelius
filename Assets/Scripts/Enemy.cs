@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, Stompable
 {
     [SerializeField] float speed;
     [SerializeField] float range;
     Rigidbody2D rb;
 
     Tweener motion;
-    Coroutine freezeAnimetion;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +17,7 @@ public class Enemy : MonoBehaviour
         //motion = transform.DOMoveX(range, range/speed).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetRelative(true); 
         motion = transform.DOBlendableMoveBy(Vector3.right * range, range/speed).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
         rb = GetComponent<Rigidbody2D>();
+
     }
 
 
@@ -26,9 +26,25 @@ public class Enemy : MonoBehaviour
         var color = sr.color;
         motion.Pause();
 
-        GetComponent<Collider2D>().usedByEffector = true;
         sr.DOColor(Color.cyan, 0.2f).onComplete = () => sr.DOColor(color, duration -.2f);
     }
+
+    public void Stomp(){
+        Destroy(gameObject);
+    }
+
+    string oldTag;
+    public void BecomePlatform(){
+        oldTag = gameObject.tag;
+        gameObject.tag = "Ground";
+        GetComponent<Collider2D>().usedByEffector = true;
+    }
+
+    public void ReturnToEnemy(){
+        gameObject.tag = oldTag;
+        GetComponent<Collider2D>().usedByEffector = false;
+    }
+
 
     public void BecomeGrabbable(){
         var grabbable = gameObject.AddComponent<Grabbable>();
@@ -47,15 +63,14 @@ public class Enemy : MonoBehaviour
     }
     public void Unfreeze(){
         rb.velocity = Vector2.zero;
-        motion.Play();
-        GetComponent<Collider2D>().usedByEffector = false;
+        motion.Restart();
     }
 
     void OnDrawGizmosSelected(){
         Gizmos.color = Color.blue;
 
-        Gizmos.DrawLine(transform.position, transform.position + (transform.right * range));
-        Gizmos.DrawCube(transform.position + (transform.right * (range/2)), Vector2.one * 0.1f);
+        Gizmos.DrawLine(new Vector2(transform.position.x - range/2, transform.position.y)
+        , new Vector2(transform.position.x + range/2, transform.position.y));
     }
 
     void OnCollisionEnter2D(Collision2D coll){
