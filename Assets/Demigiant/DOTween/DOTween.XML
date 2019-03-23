@@ -137,6 +137,17 @@
             Public so it can be used by external ease factories
             </summary>
         </member>
+        <member name="T:DG.Tweening.Core.Enums.NestedTweenFailureBehaviour">
+            <summary>
+            Behaviour in case a tween nested inside a Sequence fails
+            </summary>
+        </member>
+        <member name="F:DG.Tweening.Core.Enums.NestedTweenFailureBehaviour.TryToPreserveSequence">
+            <summary>If the Sequence contains other elements, kill the failed tween but preserve the rest</summary>
+        </member>
+        <member name="F:DG.Tweening.Core.Enums.NestedTweenFailureBehaviour.KillWholeSequence">
+            <summary>Kill the whole Sequence</summary>
+        </member>
         <member name="T:DG.Tweening.Core.Enums.UpdateNotice">
             <summary>
             Additional notices passed to plugins when updating.
@@ -217,8 +228,34 @@
         </member>
         <member name="M:DG.Tweening.Core.Utils.GetLooseScriptType(System.String)">
             <summary>
-            Looks for the type withing all possible project assembly names
+            Looks for the type within all possible project assembly names
             </summary>
+        </member>
+        <member name="M:DG.Tweening.Core.TweenerCore`3.ChangeStartValue(`1,System.Single)">
+            <summary>NO-GC METHOD: changes the start value of a tween and rewinds it (without pausing it).
+            Has no effect with tweens that are inside Sequences</summary>
+            <param name="newStartValue">The new start value</param>
+            <param name="newDuration">If bigger than 0 applies it as the new tween duration</param>
+        </member>
+        <member name="M:DG.Tweening.Core.TweenerCore`3.ChangeEndValue(`1,System.Boolean)">
+            <summary>NO-GC METHOD: changes the end value of a tween and rewinds it (without pausing it).
+            Has no effect with tweens that are inside Sequences</summary>
+            <param name="newEndValue">The new end value</param>
+            <param name="snapStartValue">If TRUE the start value will become the current target's value, otherwise it will stay the same</param>
+        </member>
+        <member name="M:DG.Tweening.Core.TweenerCore`3.ChangeEndValue(`1,System.Single,System.Boolean)">
+            <summary>NO-GC METHOD: changes the end value of a tween and rewinds it (without pausing it).
+            Has no effect with tweens that are inside Sequences</summary>
+            <param name="newEndValue">The new end value</param>
+            <param name="newDuration">If bigger than 0 applies it as the new tween duration</param>
+            <param name="snapStartValue">If TRUE the start value will become the current target's value, otherwise it will stay the same</param>
+        </member>
+        <member name="M:DG.Tweening.Core.TweenerCore`3.ChangeValues(`1,`1,System.Single)">
+            <summary>NO-GC METHOD: changes the start and end value of a tween and rewinds it (without pausing it).
+            Has no effect with tweens that are inside Sequences</summary>
+            <param name="newStartValue">The new start value</param>
+            <param name="newEndValue">The new end value</param>
+            <param name="newDuration">If bigger than 0 applies it as the new tween duration</param>
         </member>
         <member name="T:DG.Tweening.Color2">
             <summary>
@@ -262,6 +299,9 @@
         <member name="M:DG.Tweening.CustomPlugins.PureQuaternionPlugin.SetFrom(DG.Tweening.Core.TweenerCore{UnityEngine.Quaternion,UnityEngine.Quaternion,DG.Tweening.Plugins.Options.NoOptions},System.Boolean)">
             <summary>INTERNAL: do not use</summary>
         </member>
+        <member name="M:DG.Tweening.CustomPlugins.PureQuaternionPlugin.SetFrom(DG.Tweening.Core.TweenerCore{UnityEngine.Quaternion,UnityEngine.Quaternion,DG.Tweening.Plugins.Options.NoOptions},UnityEngine.Quaternion,System.Boolean)">
+            <summary>INTERNAL: do not use</summary>
+        </member>
         <member name="M:DG.Tweening.CustomPlugins.PureQuaternionPlugin.ConvertToStartValue(DG.Tweening.Core.TweenerCore{UnityEngine.Quaternion,UnityEngine.Quaternion,DG.Tweening.Plugins.Options.NoOptions},UnityEngine.Quaternion)">
             <summary>INTERNAL: do not use</summary>
         </member>
@@ -289,6 +329,10 @@
             <summary>If TRUE (default) makes tweens slightly slower but safer, automatically taking care of a series of things
             (like targets becoming null while a tween is playing).
             <para>Default: TRUE</para></summary>
+        </member>
+        <member name="F:DG.Tweening.DOTween.nestedTweenFailureBehaviour">
+            <summary>Behaviour in case a tween nested inside a Sequence fails (caught by safe mode).
+            <para>Default: NestedTweenFailureBehaviour.TryToPreserveSequence</para></summary>
         </member>
         <member name="F:DG.Tweening.DOTween.showUnityEditorReport">
             <summary>If TRUE you will get a DOTween report when exiting play mode (only in the Editor).
@@ -980,6 +1024,9 @@
         </member>
         <member name="F:DG.Tweening.PathType.CatmullRom">
             <summary>Curved path (which uses Catmull-Rom curves)</summary>
+        </member>
+        <member name="F:DG.Tweening.PathType.CubicBezier">
+            <summary><code>EXPERIMENTAL: </code>Curved path (which uses Cubic Bezier curves, where each point requires two extra control points)</summary>
         </member>
         <member name="T:DG.Tweening.Plugins.Core.PathCore.ControlPoint">
             <summary>
@@ -2364,6 +2411,24 @@
             <summary>Changes a TO tween into a FROM tween: sets the current target's position as the tween's endValue
             then immediately sends the target to the previously set endValue.</summary>
             <param name="isRelative">If TRUE the FROM value will be calculated as relative to the current one</param>
+        </member>
+        <member name="M:DG.Tweening.TweenSettingsExtensions.From``3(DG.Tweening.Core.TweenerCore{``0,``1,``2},``1,System.Boolean)">
+            <summary>Changes a TO tween into a FROM tween: sets the tween's starting value to the given one
+            and eventually sets the tween's target to that value immediately.</summary>
+            <param name="fromValue">Value to start from</param>
+            <param name="setImmediately">If TRUE sets the target to from value immediately, otherwise waits for the tween to start</param>
+        </member>
+        <member name="M:DG.Tweening.TweenSettingsExtensions.From(DG.Tweening.Core.TweenerCore{UnityEngine.Color,UnityEngine.Color,DG.Tweening.Plugins.Options.ColorOptions},System.Single,System.Boolean)">
+            <summary>Changes a TO tween into a FROM tween: sets the tween's starting value to the given one
+            and eventually sets the tween's target to that value immediately.</summary>
+            <param name="fromAlphaValue">Alpha value to start from (in case of Fade tweens)</param>
+            <param name="setImmediately">If TRUE sets the target to from value immediately, otherwise waits for the tween to start</param>
+        </member>
+        <member name="M:DG.Tweening.TweenSettingsExtensions.From(DG.Tweening.Core.TweenerCore{UnityEngine.Vector3,UnityEngine.Vector3,DG.Tweening.Plugins.Options.VectorOptions},System.Single,System.Boolean)">
+            <summary>Changes a TO tween into a FROM tween: sets the tween's starting value to the given one
+            and eventually sets the tween's target to that value immediately.</summary>
+            <param name="fromValue">Value to start from (in case of Vector tweens that act on a single coordinate or scale tweens)</param>
+            <param name="setImmediately">If TRUE sets the target to from value immediately, otherwise waits for the tween to start</param>
         </member>
         <member name="M:DG.Tweening.TweenSettingsExtensions.SetDelay``1(``0,System.Single)">
             <summary>Sets a delayed startup for the tween.

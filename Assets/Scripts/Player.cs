@@ -7,7 +7,8 @@ public class Player : MonoBehaviour
 {   
     enum State{ Normal, Casting }
     [SerializeField] float walkSpeed;
-    [SerializeField] float jumpHeight;
+    [SerializeField] float maxJumpHeight;
+    [SerializeField] float minJumpHeight;
     [SerializeField] float slowGravityScale;
     [SerializeField] GameObject freezeProjectile;
     [SerializeField] AudioClip rewindSFX;
@@ -15,6 +16,8 @@ public class Player : MonoBehaviour
     [SerializeField] Transform projectileSpawn;
 
     bool canJump = true;
+    bool releasedJump = false;
+    bool jumping = false;
 
     State state;
     Rewindable lastRewindable;
@@ -27,7 +30,7 @@ public class Player : MonoBehaviour
 
     void OnValidate(){
         if(rb== null) rb = GetComponent<Rigidbody2D>();
-        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * maxJumpHeight) * rb.mass;
     }
     
     // Start is called before the first frame update
@@ -37,10 +40,11 @@ public class Player : MonoBehaviour
         source = GetComponent<AudioSource>();
         anim = GetComponentInChildren<Animator>();
         defaultGravityScale = rb.gravityScale;
-        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * maxJumpHeight) * rb.mass;
     }
 
     public void Jump(){
+        jumping = true;
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.AddForce(jumpForce * Vector2.up, ForceMode2D.Impulse);
         canJump = false;
@@ -77,7 +81,12 @@ public class Player : MonoBehaviour
 
     void Movement(){
         if(Input.GetKeyDown(KeyCode.Space) && canJump){
+            releasedJump = false;
             Jump();
+        }
+        releasedJump = Input.GetKeyUp(KeyCode.Space);
+        if(jumping && releasedJump){
+           StartCoroutine(WaitMinimumJump());
         }
         var hor = Input.GetAxisRaw("Horizontal");
         if(hor != 0){
@@ -85,6 +94,17 @@ public class Player : MonoBehaviour
             transform.localScale = new Vector3 (hor * Mathf.Abs(scale.x) ,scale.y,scale.z);
         }       
         Walk(hor);
+    }
+
+    IEnumerator WaitMinimumJump(){
+        var startPos = transform.position.y;
+        var delta = 0f;
+        while(delta < minJumpHeight){
+            print(delta);
+            delta = transform.position.y - startPos;
+            yield return null;
+        }
+        rb.velocity *= Vector2.right;
     }
 
     void Grab(GameObject target){
@@ -173,6 +193,7 @@ public class Player : MonoBehaviour
         if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
             if(coll.gameObject.tag == "Ground" && coll.enabled){
                 canJump = true;
+                jumping = false;
             }else{
                 var stompable = coll.gameObject.GetComponent<Stompable>();
                 if(stompable != null){
