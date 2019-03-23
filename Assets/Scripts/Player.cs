@@ -37,6 +37,7 @@ public class Player : MonoBehaviour
         source = GetComponent<AudioSource>();
         anim = GetComponentInChildren<Animator>();
         defaultGravityScale = rb.gravityScale;
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
     }
 
     public void Jump(){
@@ -138,17 +139,6 @@ public class Player : MonoBehaviour
                 return;
             }
         }
-        /*var down = Physics2D.Raycast(transform.position,-transform.up,2f, notPlayerLayer);
-        if(down.collider != null){
-            var grabbable = down.transform.GetComponent<Grabbable>();
-            if(grabbable){
-                grabbable.Grab(grabSocket);
-                grabbing = grabbable;
-                grabbing.onRelease.AddListener(()=>grabbing = null);
-                grabbing.onThrow.AddListener(()=>grabbing = null);
-                return;
-            }
-        }  */
     }
     
     void OnDrawGizmosSelected(){
@@ -168,19 +158,29 @@ public class Player : MonoBehaviour
     }
 
     void OnCollisionEnter2D(Collision2D coll){
+        CheckBellow(coll);   
+    }
+
+    void OnCollisionStay2D(Collision2D coll){
+        //Checks if the player has jumped and cast magic at the same time
+        if(!canJump && state == State.Casting){
+            CheckBellow(coll);
+        }
+    }
+
+    void CheckBellow(Collision2D coll){
+        //collision from bellow
         if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
-            //collision from bellow
             if(coll.gameObject.tag == "Ground" && coll.enabled){
                 canJump = true;
-            
             }else{
                 var stompable = coll.gameObject.GetComponent<Stompable>();
                 if(stompable != null){
-                Jump();
-                stompable.Stomp();
+                    Jump();
+                    stompable.Stomp();
                 }
             }
         }
-        
     }
+
 }
