@@ -49,7 +49,6 @@ public class CameraControl : MonoBehaviour{
         }
         target = _target;
 
-        print( GetCameraSpeed());
         followMotion = transform.DOMove(new Vector3(target.position.x, target.position.y, posZ), .2f).
         SetEase(Ease.InOutSine).
         SetUpdate(UpdateType.Fixed);

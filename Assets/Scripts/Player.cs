@@ -5,11 +5,14 @@ using UnityEngine.Events;
 
 public class Player : MonoBehaviour
 {   
-    enum State{ Normal, Casting }
+    enum State{ Normal, Casting, Grabbing }
     [SerializeField] float walkSpeed;
     [SerializeField] float maxJumpHeight;
     [SerializeField] float minJumpHeight;
     [SerializeField] float slowGravityScale;
+
+    [SerializeField] float throwDuration;
+
     [SerializeField] GameObject freezeProjectile;
     [SerializeField] AudioClip rewindSFX;
     [SerializeField] Transform grabSocket;
@@ -18,15 +21,18 @@ public class Player : MonoBehaviour
     bool canJump = true;
     bool releasedJump = false;
     bool jumping = false;
+    float jumpForce;
+    float defaultGravityScale;
 
     State state;
     Rewindable lastRewindable;
-    float defaultGravityScale;
+    Grabbable grabbing;
+    
+
     Rigidbody2D rb;
     Animator anim;
-    float jumpForce;
     AudioSource source;
-    Grabbable grabbing;
+    
 
     void OnValidate(){
         if(rb== null) rb = GetComponent<Rigidbody2D>();
@@ -42,7 +48,7 @@ public class Player : MonoBehaviour
         defaultGravityScale = rb.gravityScale;
         jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * maxJumpHeight) * rb.mass;
     }
-
+    #region Basic Actions
     public void Jump(){
         jumping = true;
         rb.velocity = new Vector2(rb.velocity.x, 0);
@@ -51,9 +57,28 @@ public class Player : MonoBehaviour
     }
     void Walk(float direction){
         rb.velocity = new Vector2(walkSpeed * direction, rb.velocity.y);
-        anim.SetFloat("speed", Mathf.Abs(rb.velocity.x));
+        anim.SetFloat
+        ("speed", Mathf.Abs(rb.velocity.x));
     }
-    void LaunchFreeze(){
+
+    void Movement(){
+        if(Input.GetKeyDown(KeyCode.Space) && canJump){
+            releasedJump = false;
+            Jump();
+        }
+        releasedJump = Input.GetKeyUp(KeyCode.Space);
+        if(jumping && releasedJump){
+           //StartCoroutine(WaitMinimumJump());
+        }
+        var hor = Input.GetAxisRaw("Horizontal");
+        if(hor != 0){
+            var scale = transform.localScale;
+            transform.localScale = new Vector3 (hor * Mathf.Abs(scale.x) ,scale.y,scale.z);
+        }       
+        Walk(hor);
+    }
+
+    void LaunchProjectile(){
 
         var projectile = Instantiate(freezeProjectile,projectileSpawn.position, transform.rotation);
         GameManager.instance.cameraController.SetTarget(projectile.transform, true);
@@ -66,51 +91,19 @@ public class Player : MonoBehaviour
         rb.gravityScale = slowGravityScale;
         state = State.Casting;
     }
+    #endregion
 
-    void CheckRewindable(MonoBehaviour effect){
-        if(effect is Rewindable){
-            this.lastRewindable = (Rewindable) effect;
-        }
+    void Grab(Grabbable grabbable){
+        grabbable.Grab(grabSocket);
+        grabbing = grabbable;
+        grabbing.onRelease.AddListener(()=>grabbing = null);
+        grabbing.onThrow.AddListener(()=>grabbing = null);
+        state = State.Grabbing;
+
     }
-
-    void ReturnControl(){
-        state = State.Normal;
-        rb.gravityScale = defaultGravityScale;
-        GameManager.instance.cameraController.ReturnToPlayer();
-    }
-
-    void Movement(){
-        if(Input.GetKeyDown(KeyCode.Space) && canJump){
-            releasedJump = false;
-            Jump();
-        }
-        releasedJump = Input.GetKeyUp(KeyCode.Space);
-        if(jumping && releasedJump){
-           StartCoroutine(WaitMinimumJump());
-        }
-        var hor = Input.GetAxisRaw("Horizontal");
-        if(hor != 0){
-            var scale = transform.localScale;
-            transform.localScale = new Vector3 (hor * Mathf.Abs(scale.x) ,scale.y,scale.z);
-        }       
-        Walk(hor);
-    }
-
-    IEnumerator WaitMinimumJump(){
-        var startPos = transform.position.y;
-        var delta = 0f;
-        while(delta < minJumpHeight){
-            print(delta);
-            delta = transform.position.y - startPos;
-            yield return null;
-        }
-        rb.velocity *= Vector2.right;
-    }
-
-    void Grab(GameObject target){
-        var grabbable = target.GetComponent<Grabbable>();
-        if(grabbable == null) return;
-
+    void Throw(){
+        grabbing.Throw(maxJumpHeight - 2.5f, 4);
+        state = State.Normal;        
     }
 
     void Rewind(){
@@ -126,24 +119,55 @@ public class Player : MonoBehaviour
     }
 
     void Attack(){
-        if(Input.GetKeyDown(KeyCode.E)){
-            LaunchFreeze();
-        }
-        if(Input.GetKeyDown(KeyCode.R)){
-            Rewind();
+        if(state != State.Grabbing){
+            if(Input.GetKeyDown(KeyCode.E)){
+                LaunchProjectile();
+            }
+            if(Input.GetKeyDown(KeyCode.R)){
+                Rewind();
+            }
         }
 
         if(Input.GetKeyDown(KeyCode.LeftShift)){
             if(grabbing != null){
-                grabbing.Throw();
+                Throw();
             }else{
                 CheckForGrabbables(Vector2.down);
             }
             
         }
     }
+
+    #region Utility Methods
+
     public void AllowJump(){
         canJump = true;
+    }
+    void CheckBellow(Collision2D coll){
+        //collision from bellow
+        if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
+            if(coll.gameObject.tag == "Ground" && coll.enabled){
+                canJump = true;
+                jumping = false;
+            }else{
+                var stompable = coll.gameObject.GetComponent<Stompable>();
+                if(stompable != null){
+                    Jump();
+                    stompable.Stomp();
+                }
+            }
+        }
+    }
+    void CheckRewindable(MonoBehaviour effect){
+        if(effect is Rewindable){
+            this.lastRewindable = (Rewindable) effect;
+        }
+    }
+
+    void ReturnControl(){
+        state = State.Normal;
+        rb.gravityScale = defaultGravityScale;
+        GameManager.instance.cameraController.ReturnToPlayer();
     }
 
     void CheckForGrabbables(Vector2 direction){
@@ -152,25 +176,15 @@ public class Player : MonoBehaviour
         if(hit.collider != null){
             var grabbable = hit.transform.GetComponent<Grabbable>();
             if(grabbable){
-                grabbable.Grab(grabSocket);
-                grabbing = grabbable;
-                grabbing.onRelease.AddListener(()=>grabbing = null);
-                grabbing.onThrow.AddListener(()=>grabbing = null);
-                return;
+                Grab(grabbable);
             }
         }
     }
-    
-    void OnDrawGizmosSelected(){
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(new Ray(transform.position, transform.TransformDirection(Vector2.right) * 2f));
-        Gizmos.DrawRay(new Ray(transform.position, -transform.up * 2f));
-    }
+    #endregion
 
-    // Update is called once per frame
     void Update()
     {
-        if(state == State.Normal){
+        if(state != State.Casting){
             Movement();
             Attack();
         }
@@ -188,20 +202,13 @@ public class Player : MonoBehaviour
         }
     }
 
-    void CheckBellow(Collision2D coll){
-        //collision from bellow
-        if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
-            if(coll.gameObject.tag == "Ground" && coll.enabled){
-                canJump = true;
-                jumping = false;
-            }else{
-                var stompable = coll.gameObject.GetComponent<Stompable>();
-                if(stompable != null){
-                    Jump();
-                    stompable.Stomp();
-                }
-            }
-        }
+    void OnDrawGizmosSelected(){
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(new Ray(transform.position, transform.TransformDirection(Vector2.right) * 2f));
+        Gizmos.DrawRay(new Ray(transform.position, -transform.up * 2f));
     }
+
+
+    
 
 }

@@ -58,9 +58,35 @@ public class Grabbable: Affectable
         onThrow.Invoke();
     }
 
+    public void Throw(float verticalDistance, float horizontalDistance){
+        if(follow != null)
+            StopCoroutine(follow);
+        
+        //Como o objeto é jogado do alto do jogador, ele alcança o limite horizontal ainda no ar
+        //Como não posso ser incomodado paa fazer os cálculos considerando a altura inicial,
+        //só reduzo uma unidade, gerando uma aproximação adequada
+        horizontalDistance--;
+        var rb = GetComponent<Rigidbody2D>();
+
+        float vertSpeed = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * verticalDistance) * rb.mass;
+        float duration = (2 * vertSpeed) / (Physics2D.gravity.magnitude * rb.gravityScale);
+        float horSpeed = horizontalDistance / duration;
+
+        
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        GetComponent<Collider2D>().enabled = true;
+        rb.velocity = new Vector2(horSpeed * socket.TransformDirection(Vector2.right).x, vertSpeed);
+        onThrow.Invoke();
+    }
+
+    void Launch(float force){
+        
+    }
+
    IEnumerator FollowHolder(){
        while(true){
            transform.position = socket.position;
+           transform.localScale = socket.localScale;
            yield return null;
        }
        
