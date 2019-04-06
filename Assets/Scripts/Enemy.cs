@@ -10,23 +10,30 @@ public class Enemy : MonoBehaviour, Stompable
     Rigidbody2D rb;
 
     Tweener motion;
+    Tweener colorChange;
 
-    // Start is called before the first frame update
+    private int currentDirection = 1;
+
     void Start()
     {   
         //motion = transform.DOMoveX(range, range/speed).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetRelative(true); 
-        motion = transform.DOBlendableMoveBy(Vector3.right * range, range/speed).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+        StartMove();
         rb = GetComponent<Rigidbody2D>();
 
     }
-
+    private void StartMove()
+    {
+        motion = transform.DOBlendableMoveBy((Vector3.right * currentDirection) * (range/2), range/speed).SetLoops(2, LoopType.Yoyo).OnComplete(() => StartMove());
+        currentDirection = -currentDirection;
+    }
 
     public void Freeze(float duration){
         var sr = GetComponent<SpriteRenderer>();
+        if(colorChange != null) colorChange.Kill();
         var color = sr.color;
         motion.Pause();
 
-        sr.DOColor(Color.cyan, 0.2f).onComplete = () => sr.DOColor(color, duration -.2f);
+        sr.DOColor(Color.cyan, 0.2f).onComplete = () => colorChange = sr.DOColor(color, duration -.2f);
     }
 
     public void Stomp(){
@@ -63,7 +70,8 @@ public class Enemy : MonoBehaviour, Stompable
     }
     public void Unfreeze(){
         rb.velocity = Vector2.zero;
-        motion.Restart();
+        currentDirection = (transform.position.x - GameObject.Find("Player").transform.position.x) > 0 ? -1 : 1;
+        StartMove();
     }
 
     void OnDrawGizmosSelected(){

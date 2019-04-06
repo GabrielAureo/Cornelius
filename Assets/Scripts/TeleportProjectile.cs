@@ -3,10 +3,6 @@ using UnityEngine;
 
 public class TeleportProjectile : GuidedProjectile
 {
-    public override MonoBehaviour getEffect()
-    {
-        throw new NotImplementedException();
-    }
 
     protected override void onHit(Collider2D hit)
     {

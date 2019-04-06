@@ -7,15 +7,18 @@ using DG.Tweening;
 public class Grabbable: Affectable
 {
     public bool isAffectable;
-    public float throwForce;
     public UnityEvent onGrab = new UnityEvent();
     public UnityEvent onRelease = new UnityEvent();
     public UnityEvent onThrow = new UnityEvent();
-    
+    public UnityEvent onFree = new UnityEvent();
+    public UnityEvent onGroundHit = new UnityEvent();
+
     Transform socket;
     Coroutine follow;
+    Rigidbody2D rb;
 
     void Start(){
+        rb = GetComponent<Rigidbody2D>();
         if(onGrab == null) onGrab = new UnityEvent();
         if(onRelease == null) onRelease = new UnityEvent();
         if(onThrow == null) onThrow = new UnityEvent();
@@ -28,7 +31,7 @@ public class Grabbable: Affectable
     public bool Grab(Transform socket){
         if(!isAffectable) return false;
         var collider = GetComponent<Collider2D>();
-        GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+        rb.bodyType = RigidbodyType2D.Static;
         collider.enabled = false;
         transform.DOMove(socket.transform.position, 0.2f, false).OnComplete(()=>{
             this.socket = socket;
@@ -44,39 +47,27 @@ public class Grabbable: Affectable
     public void Release(){
         if(follow != null)
             StopCoroutine(follow);
+        
+        rb.bodyType = RigidbodyType2D.Dynamic;
         GetComponent<Collider2D>().enabled = true;
         onRelease.Invoke();
     }
-    public void Throw(){
+    public void Throw(float force){
         if(follow != null)
             StopCoroutine(follow);
 
         var rb = GetComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Dynamic;
         GetComponent<Collider2D>().enabled = true;
-        rb.AddForce(socket.TransformDirection(Vector2.one) * throwForce);
+        rb.AddForce(socket.TransformDirection(Vector2.one) * force, ForceMode2D.Impulse);
         onThrow.Invoke();
     }
 
-    public void Throw(float verticalDistance, float horizontalDistance){
+    public void Free(){
         if(follow != null)
             StopCoroutine(follow);
-        
-        //Como o objeto é jogado do alto do jogador, ele alcança o limite horizontal ainda no ar
-        //Como não posso ser incomodado paa fazer os cálculos considerando a altura inicial,
-        //só reduzo uma unidade, gerando uma aproximação adequada
-        horizontalDistance--;
-        var rb = GetComponent<Rigidbody2D>();
-
-        float vertSpeed = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * verticalDistance) * rb.mass;
-        float duration = (2 * vertSpeed) / (Physics2D.gravity.magnitude * rb.gravityScale);
-        float horSpeed = horizontalDistance / duration;
-
-        
-        rb.bodyType = RigidbodyType2D.Dynamic;
         GetComponent<Collider2D>().enabled = true;
-        rb.velocity = new Vector2(horSpeed * socket.TransformDirection(Vector2.right).x, vertSpeed);
-        onThrow.Invoke();
+        onFree.Invoke();
     }
 
     void Launch(float force){
@@ -89,7 +80,14 @@ public class Grabbable: Affectable
            transform.localScale = socket.localScale;
            yield return null;
        }
-       
-       
    }
+
+   void OnCollisionEnter2D(Collision2D coll){
+       if(coll.otherCollider.tag == "Ground"){
+           
+       }
+       onGroundHit.Invoke();
+   }
+
+
 }

@@ -23,10 +23,6 @@ public class FreezingProjectile : GuidedProjectile{
         //FreezeEnemy(hit.gameObject);   
     }
 
-    public override MonoBehaviour getEffect(){
-        return this;
-    }
-
     protected override void onUpdate(){}    
 
 }

@@ -1,11 +1,15 @@
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.Events;
+
+public enum CameraBehaviour{FollowTarget, Anchored}
 
 public class CameraControl : MonoBehaviour{
 
     [SerializeField] Transform initialTarget;
     [SerializeField] CameraSettings defaultSettings;
-    Tweener followMotion;
+    Tweener motion;
+    CameraBehaviour state;
 
     float posZ;
     Transform target;
@@ -17,22 +21,40 @@ public class CameraControl : MonoBehaviour{
         posZ = transform.position.z;
     }
 
-    void Update(){
-        if(target != null && false){
-            var pos = target.position + settings.offset;
-            //transform.position = new Vector3(pos.x, pos.y, posZ);
+
+    public void SetMode(CameraBehaviour mode, Transform target, bool interpolate = true, UnityAction interpolateCallback = null){
+        state = mode;
+        switch(state){
+            case CameraBehaviour.Anchored:
+                motion.Kill();
+                if(interpolate){
+                    motion = transform.DOMove(target.position, 1f);
+                    if(interpolateCallback != null){
+                        interpolateCallback();
+                    }
+                }else{
+                    transform.position = target.position;
+                }
+                break;
+            case CameraBehaviour.FollowTarget:
+                SetTarget(target, interpolate);
+                break;
+        }
+    }
+    public void Shake(float duration){
+        if(motion.IsPlaying()){
+            motion.onComplete += () => transform.DOShakePosition(duration, .5f, 2, 45,false, false).SetEase(Ease.OutSine);
         }
         
-
     }
-
-    public void SetTarget(Transform target,bool interpolate = false, CameraSettings settings = null){
+    public void SetTarget(Transform target,bool interpolate = true, CameraSettings settings = null){
+        if(state == CameraBehaviour.Anchored) return;
         if(settings == null){ 
             settings = defaultSettings;
         }else{
             this.settings = settings;
         }
-        Camera.main.DOOrthoSize(settings.size, .2f);
+        //Camera.main.DOOrthoSize(settings.size, .2f);
         if(interpolate){
             var newPos = target.position + settings.offset;
             //transform.DOMove(new Vector3(newPos.x, newPos.y, posZ), .2f).SetEase(Ease.InOutSine).
@@ -44,16 +66,16 @@ public class CameraControl : MonoBehaviour{
     }
 
     void ChangeTargetFollow(Transform _target){
-        if(followMotion != null){
-            followMotion.Kill();
+        if(motion != null){
+            motion.Kill();
         }
         target = _target;
 
-        followMotion = transform.DOMove(new Vector3(target.position.x, target.position.y, posZ), .2f).
+        motion = transform.DOMove(new Vector3(target.position.x, target.position.y, posZ), .2f).
         SetEase(Ease.InOutSine).
         SetUpdate(UpdateType.Fixed);
-        followMotion.OnUpdate(()=>{
-            followMotion.ChangeEndValue(new Vector3(target.position.x, target.position.y, posZ),.05f, true);
+        motion.OnUpdate(()=>{
+            motion.ChangeEndValue(new Vector3(target.position.x, target.position.y, posZ),.05f, true);
         });
     }
 

@@ -2,31 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using DG.Tweening;
 
 public class Player : MonoBehaviour
 {   
     enum State{ Normal, Casting, Grabbing }
-    [SerializeField] float walkSpeed;
-    [SerializeField] float maxJumpHeight;
-    [SerializeField] float minJumpHeight;
-    [SerializeField] float slowGravityScale;
+    public float walkSpeed;
+    public float maxJumpHeight;
+    public float minJumpHeight;
+    public float slowGravityScale;
 
-    [SerializeField] float throwDuration;
+    public float throwForce;
 
-    [SerializeField] GameObject freezeProjectile;
-    [SerializeField] AudioClip rewindSFX;
-    [SerializeField] Transform grabSocket;
-    [SerializeField] Transform projectileSpawn;
+    public GameObject freezeProjectile;
+    public AudioClip rewindSFX;
+    public Transform projectileSpawn;
+    public Grabber grabber;
+    public SpriteRenderer spriteRenderer;
+    public float invulnerabilityDuration;
 
+    bool invulnerable;
     bool canJump = true;
     bool releasedJump = false;
     bool jumping = false;
     float jumpForce;
     float defaultGravityScale;
 
+    GuidedProjectile currentProjectile;
+
     State state;
     Rewindable lastRewindable;
-    Grabbable grabbing;
     
 
     Rigidbody2D rb;
@@ -60,15 +65,26 @@ public class Player : MonoBehaviour
         anim.SetFloat
         ("speed", Mathf.Abs(rb.velocity.x));
     }
+    public void TakeDamage(){
+        if(invulnerable) return;
+        if(state == State.Casting){
+            currentProjectile.DestroyProjectile();
+        }
+        if(state == State.Grabbing){
+            grabber.Release();
+        }
+        state = State.Normal;
+        spriteRenderer.DOColor(Color.red, invulnerabilityDuration).SetEase(Ease.Flash,5).onComplete+=()=>
+        {
+            invulnerable = false;
+            spriteRenderer.DOColor(Color.white, .1f);
+        };
+    }
 
     void Movement(){
         if(Input.GetKeyDown(KeyCode.Space) && canJump){
             releasedJump = false;
             Jump();
-        }
-        releasedJump = Input.GetKeyUp(KeyCode.Space);
-        if(jumping && releasedJump){
-           //StartCoroutine(WaitMinimumJump());
         }
         var hor = Input.GetAxisRaw("Horizontal");
         if(hor != 0){
@@ -78,32 +94,28 @@ public class Player : MonoBehaviour
         Walk(hor);
     }
 
-    void LaunchProjectile(){
+    GuidedProjectile LaunchProjectile(){
 
         var projectile = Instantiate(freezeProjectile,projectileSpawn.position, transform.rotation);
         GameManager.instance.cameraController.SetTarget(projectile.transform, true);
 
         var projScript = projectile.GetComponent<GuidedProjectile>();
+        projScript.onDestroy.AddListener(ReturnControl);
 
-        projScript.Initialize(CheckRewindable, ReturnControl, KeyCode.E);
+        projScript.Initialize(CheckRewindable);
 
         rb.velocity = Vector2.zero;
         rb.gravityScale = slowGravityScale;
         state = State.Casting;
+        return projScript;
     }
     #endregion
 
-    void Grab(Grabbable grabbable){
-        grabbable.Grab(grabSocket);
-        grabbing = grabbable;
-        grabbing.onRelease.AddListener(()=>grabbing = null);
-        grabbing.onThrow.AddListener(()=>grabbing = null);
+    public void Grab(){
         state = State.Grabbing;
-
     }
-    void Throw(){
-        grabbing.Throw(maxJumpHeight - 2.5f, 4);
-        state = State.Normal;        
+    public void ReleaseGrabbable(){
+        state = State.Normal;
     }
 
     void Rewind(){
@@ -121,18 +133,23 @@ public class Player : MonoBehaviour
     void Attack(){
         if(state != State.Grabbing){
             if(Input.GetKeyDown(KeyCode.E)){
-                LaunchProjectile();
+                if(currentProjectile != null){
+                    currentProjectile.DestroyProjectile();
+                    currentProjectile = null;
+                    return;
+                }
+                currentProjectile = LaunchProjectile();
             }
             if(Input.GetKeyDown(KeyCode.R)){
                 Rewind();
             }
         }
 
-        if(Input.GetKeyDown(KeyCode.LeftShift)){
-            if(grabbing != null){
-                Throw();
+        if(Input.GetKeyDown(KeyCode.LeftShift) && state != State.Casting){
+            if(grabber.currentGrab != null){
+                grabber.Throw();
             }else{
-                CheckForGrabbables(Vector2.down);
+                grabber.TryGrab();
             }
             
         }
@@ -164,30 +181,23 @@ public class Player : MonoBehaviour
         }
     }
 
+
     void ReturnControl(){
         state = State.Normal;
         rb.gravityScale = defaultGravityScale;
         GameManager.instance.cameraController.ReturnToPlayer();
     }
 
-    void CheckForGrabbables(Vector2 direction){
-        int notPlayerLayer = ~(1 << 8);
-        var hit = Physics2D.Raycast(transform.position,transform.TransformDirection(direction),2f, notPlayerLayer);
-        if(hit.collider != null){
-            var grabbable = hit.transform.GetComponent<Grabbable>();
-            if(grabbable){
-                Grab(grabbable);
-            }
-        }
-    }
+
     #endregion
 
     void Update()
     {
         if(state != State.Casting){
             Movement();
-            Attack();
+           
         }
+        Attack();
         
     }
 

@@ -10,7 +10,7 @@ public abstract class GuidedProjectile : MonoBehaviour{
     [SerializeField] protected float speed;
 
     protected Rigidbody2D rb;
-    protected UnityAction destroyAction;
+    public UnityEvent onDestroy;
     protected UnityAction<MonoBehaviour> effectAction;
     protected float timer;
     protected KeyCode selfDestroyKey;
@@ -21,27 +21,24 @@ public abstract class GuidedProjectile : MonoBehaviour{
     /// <param name="onEffect">Callback to when the projectile hits a target and apply some effect</param>
     /// <param name="onDestroy">Callback to when the projectile is destroyed</param>
 
-    public void Initialize(UnityAction<MonoBehaviour> onEffect, UnityAction onDestroy, KeyCode selfDestroyKey){
+    public void Initialize(UnityAction<MonoBehaviour> onEffect){
         rb = GetComponent<Rigidbody2D>();
         effectAction = onEffect;
-        destroyAction = onDestroy;
-        this.selfDestroyKey = selfDestroyKey;
         onInitialize();
     }
 
     protected abstract void onInitialize();
     protected abstract void onHit(Collider2D hit);
     protected abstract void onUpdate();
-    public abstract MonoBehaviour getEffect();
 
-    private void Destruction(){
-        destroyAction();
+    public void DestroyProjectile(){
+        onDestroy.Invoke();
         Destroy(gameObject);
     }
 
     void OnTriggerEnter2D(Collider2D coll){
         onHit(coll);
-        Destruction();
+        DestroyProjectile();
     }
 
     private void Update(){
@@ -49,10 +46,7 @@ public abstract class GuidedProjectile : MonoBehaviour{
         timer += Time.deltaTime;
         onUpdate();
         if(timer >= duration){
-            Destruction();
-        }
-        if(selfDestroyKey != KeyCode.None && Input.GetKeyDown(selfDestroyKey)){
-            Destruction();
+            DestroyProjectile();
         }
 
     }
