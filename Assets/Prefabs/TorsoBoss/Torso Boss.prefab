@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4747566274600390231}
   - component: {fileID: 1045983277411263680}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Torso Boss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -52,6 +52,7 @@ MonoBehaviour:
   eyeEllipse: {x: 0, y: 0, z: 0}
   eyeEllipseRadius: {x: 0, y: 0}
   timeDistanceEyes: 0
+  lives: 3
   hands:
   - {fileID: 6511187267165237432}
   - {fileID: 3910821473120295346}
@@ -70,8 +71,9 @@ GameObject:
   - component: {fileID: 4747566275759111501}
   - component: {fileID: 4747566275759111500}
   - component: {fileID: 8778183191245110566}
-  - component: {fileID: 654352841660124200}
-  m_Layer: 0
+  - component: {fileID: 9141066341063955396}
+  - component: {fileID: 6206491669477516552}
+  m_Layer: 14
   m_Name: Torso
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -184,7 +186,7 @@ PolygonCollider2D:
       - {x: 0.114383385, y: -0.7669033}
       - {x: 0.23188591, y: -0.62563914}
       - {x: 0.47927827, y: -0.19118664}
---- !u!114 &654352841660124200
+--- !u!114 &9141066341063955396
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -193,10 +195,42 @@ MonoBehaviour:
   m_GameObject: {fileID: 4747566275759111491}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d36fbc908ffce0a42860cd0ebeb16412, type: 3}
+  m_Script: {fileID: 11500000, guid: e0205bdb8ded97d49b21b7cf292ca311, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  side: 0
   active: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 256
+--- !u!114 &6206491669477516552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4747566275759111491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 577fef0facf96bc40aa3805bcbd28c65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDamage:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1045983277411263680}
+        m_MethodName: TakeDamage
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!1001 &1633812531096838722
 PrefabInstance:
   m_ObjectHideFlags: 0

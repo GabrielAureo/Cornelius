@@ -7,11 +7,19 @@ using DG.Tweening;
 public class Grabbable: Affectable
 {
     public bool isAffectable;
+    public Collider2D bodyCollider;
+    [Space]
     public UnityEvent onGrab = new UnityEvent();
     public UnityEvent onRelease = new UnityEvent();
     public UnityEvent onThrow = new UnityEvent();
     public UnityEvent onFree = new UnityEvent();
     public UnityEvent onGroundHit = new UnityEvent();
+
+    [HideInInspector]
+    /// <summary>
+    /// Checks if the object has finihed translating to the holder
+    /// </summary>
+    public bool hasFinishedGrabbed = false;
 
     Transform socket;
     Coroutine follow;
@@ -19,6 +27,7 @@ public class Grabbable: Affectable
 
     void Start(){
         rb = GetComponent<Rigidbody2D>();
+        bodyCollider = GetComponent<Collider2D>();
         if(onGrab == null) onGrab = new UnityEvent();
         if(onRelease == null) onRelease = new UnityEvent();
         if(onThrow == null) onThrow = new UnityEvent();
@@ -30,15 +39,24 @@ public class Grabbable: Affectable
 
     public bool Grab(Transform socket){
         if(!isAffectable) return false;
-        var collider = GetComponent<Collider2D>();
         rb.bodyType = RigidbodyType2D.Static;
-        collider.enabled = false;
-        transform.DOMove(socket.transform.position, 0.2f, false).OnComplete(()=>{
+        bodyCollider.enabled = false;
+        StartCoroutine(SocketTranslation(socket));
+        return true;
+    }
+
+    IEnumerator SocketTranslation(Transform socket){
+        hasFinishedGrabbed = false;
+        var translate = transform.DOMove(socket.transform.position, 0.2f, false).OnComplete(()=>{
             this.socket = socket;
             onGrab.Invoke();
             follow = StartCoroutine(FollowHolder());
         });
-        return true;
+        translate.SetUpdate(UpdateType.Fixed);
+        transform.DORotateQuaternion(Quaternion.identity,.2f);
+        yield return translate.WaitForCompletion();
+        hasFinishedGrabbed = true;
+
     }
     public override bool Dispel(){
         Release();
@@ -49,7 +67,7 @@ public class Grabbable: Affectable
             StopCoroutine(follow);
         
         rb.bodyType = RigidbodyType2D.Dynamic;
-        GetComponent<Collider2D>().enabled = true;
+        
         onRelease.Invoke();
     }
     public void Throw(float force){
@@ -58,7 +76,8 @@ public class Grabbable: Affectable
 
         var rb = GetComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Dynamic;
-        GetComponent<Collider2D>().enabled = true;
+        bodyCollider.enabled = true;
+        print(socket.TransformDirection(Vector2.one) * force);
         rb.AddForce(socket.TransformDirection(Vector2.one) * force, ForceMode2D.Impulse);
         onThrow.Invoke();
     }
@@ -66,7 +85,7 @@ public class Grabbable: Affectable
     public void Free(){
         if(follow != null)
             StopCoroutine(follow);
-        GetComponent<Collider2D>().enabled = true;
+        bodyCollider.enabled = true;
         onFree.Invoke();
     }
 
@@ -78,7 +97,8 @@ public class Grabbable: Affectable
        while(true){
            transform.position = socket.position;
            transform.localScale = socket.localScale;
-           yield return null;
+           transform.rotation = Quaternion.identity;
+           yield return new WaitForFixedUpdate();
        }
    }
 

@@ -6,11 +6,13 @@ public class TorsoBossEye : MonoBehaviour{
     public Collider2D coll;
     public float speed;
 
-    SpriteRenderer sr;
-    Coroutine motion;
-    Rigidbody2D rb;
-    Freezable freezeControl;
-    Hurtable hurtControl;
+    Vector3 defaultPosition;
+
+    public SpriteRenderer sr;
+    public Coroutine motion;
+    public Rigidbody2D rb;
+    public Freezable freezeControl;
+    public HurtCollider hurtControl;
 
     public bool paused = false;
 
@@ -18,25 +20,33 @@ public class TorsoBossEye : MonoBehaviour{
 
     void Start(){
         timer = 0f;
-        freezeControl = GetComponent<Freezable>();
-        coll = GetComponent<Collider2D>();
-        sr = GetComponent<SpriteRenderer>();
-        hurtControl = GetComponent<Hurtable>();
+        defaultPosition = transform.position;
+        // freezeControl = GetComponent<Freezable>();
+        // coll = GetComponent<Collider2D>();
+        // sr = GetComponent<SpriteRenderer>();
+        // hurtControl = GetComponent<HurtCollider>();
     }
 
     public void Attach(){
         coll.enabled = false;
     }
 
+    public void BecomeThrowable(){
+        hurtControl.onCollision.AddListener(()=> rb.velocity = Vector3.zero);
+    }
+
     public void Freeze(float duration){
         paused = true;
-        hurtControl.active = false;
         coll.isTrigger = false;
+    }
+
+    public IEnumerator ReturnToDefault(){
+        StopCoroutine(motion);
+        yield return transform.DOMove(defaultPosition,.8f).WaitForCompletion();
     }
 
     public void Unfreeze(){
         paused = false;
-        hurtControl.active = true;
         coll.isTrigger = true;
     }
 

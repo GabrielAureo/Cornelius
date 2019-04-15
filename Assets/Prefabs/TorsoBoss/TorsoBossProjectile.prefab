@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4290941874782214822}
   - component: {fileID: 3972123663516040354}
   - component: {fileID: 2259013138179907127}
-  - component: {fileID: 5856269686467637683}
+  - component: {fileID: 8929294169641674372}
   m_Layer: 11
   m_Name: TorsoBossProjectile
   m_TagString: Untagged
@@ -134,7 +134,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 1
   changeDirectionFrquency: 1
---- !u!114 &5856269686467637683
+--- !u!114 &8929294169641674372
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,7 +143,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4290941874782214821}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d36fbc908ffce0a42860cd0ebeb16412, type: 3}
+  m_Script: {fileID: 11500000, guid: e0205bdb8ded97d49b21b7cf292ca311, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   active: 1
+  layer:
+    serializedVersion: 2
+    m_Bits: 256

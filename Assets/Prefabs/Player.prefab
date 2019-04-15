@@ -143,6 +143,7 @@ GameObject:
   - component: {fileID: 964889256935272223}
   - component: {fileID: 964889256935272208}
   - component: {fileID: 964889256935272220}
+  - component: {fileID: 6606748905809809455}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -164,6 +165,7 @@ Transform:
   - {fileID: 964889255943240058}
   - {fileID: 964889257481434437}
   - {fileID: 964889256374694105}
+  - {fileID: 9000510466180852486}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -180,10 +182,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   walkSpeed: 5
-  maxJumpHeight: 3
-  minJumpHeight: 2
+  jumpHeight: 0
   slowGravityScale: 0.5
-  throwForce: 7
+  throwForce: 8
   freezeProjectile: {fileID: 4692705075806299562, guid: 0319b2c1c5fed1a49b544475688c7bf8,
     type: 3}
   rewindSFX: {fileID: 8300000, guid: 3a4c3f31bcc501c47a7ab84e96e08df0, type: 3}
@@ -191,6 +192,35 @@ MonoBehaviour:
   grabber: {fileID: 3107925240012110984}
   spriteRenderer: {fileID: 964889256374694104}
   invulnerabilityDuration: 1
+  footCollider: {fileID: 6611104490694496001}
+  groundFilter:
+    useTriggers: 1
+    useLayerMask: 1
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 4096
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  enemyFilter:
+    useTriggers: 1
+    useLayerMask: 1
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 1024
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
 --- !u!114 &3107925240012110984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -204,7 +234,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   throwForce: 7
+  angleAdjustSpeed: 0
   grabSocket: {fileID: 964889255943240058}
+  bodyCollider: {fileID: 964889256935272220}
   onGrab:
     m_PersistentCalls:
       m_Calls:
@@ -294,8 +326,8 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
-  m_GravityScale: 7
+  m_AngularDrag: 0.01
+  m_GravityScale: 6
   m_Material: {fileID: 6200000, guid: a1888776758fd52419ab7a1de5fd6a99, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
@@ -409,7 +441,7 @@ BoxCollider2D:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_UsedByEffector: 0
-  m_UsedByComposite: 1
+  m_UsedByComposite: 0
   m_Offset: {x: 0.02062583, y: -0.021849573}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
@@ -423,6 +455,34 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.31077814, y: 0.7564925}
   m_EdgeRadius: 0
+--- !u!114 &6606748905809809455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964889256935272218}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 577fef0facf96bc40aa3805bcbd28c65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDamage:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 964889256935272221}
+        m_MethodName: TakeDamage
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!1 &964889257481434434
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,3 +513,50 @@ Transform:
   m_Father: {fileID: 964889256935272209}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3950881037871543773
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000510466180852486}
+  - component: {fileID: 6611104490694496001}
+  m_Layer: 8
+  m_Name: GroundCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000510466180852486
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3950881037871543773}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 964889256935272209}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!70 &6611104490694496001
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3950881037871543773}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.02, y: -0.39}
+  m_Size: {x: 0.28, y: 0.31}
+  m_Direction: 0

@@ -12,15 +12,21 @@ public class TorsoBoss : Boss{
     public Vector3 eyeEllipse;
     public Vector2 eyeEllipseRadius;
     public float timeDistanceEyes;
+    public int lives;
+    int life;
+
+    Coroutine currentAttack;
 
     public List<TorsoBossHand> hands;
     List<TorsoBossEye> eyes;
     public Transform cameraAnchor;
     TorsoBossHand activeHand;
+    bool hitFlag;
 
     public GameObject eyeProjectile;
 
     public override void StartFight(){
+        life = lives;
         SimplePool.Preload(eyeProjectile,10);
         eyes = new List<TorsoBossEye>();
         activeHand = hands[0];
@@ -29,6 +35,18 @@ public class TorsoBoss : Boss{
         }
         activeHand.setAsActive();
         StartCoroutine(EmergeAnimation());
+    }
+
+    public void TakeDamage(){
+        hitFlag = true;
+        StopCoroutine(currentAttack);
+        StartCoroutine(DamageAnimation());
+    }
+    IEnumerator DamageAnimation(){
+        yield return transform.DOShakePosition(.5f,2,30,30).WaitForCompletion();
+        StartCoroutine(RestartCycle());
+
+
     }
 
     IEnumerator EmergeAnimation(){
@@ -46,9 +64,22 @@ public class TorsoBoss : Boss{
     }
 
     IEnumerator AttackPattern(){
-        StartCoroutine(EyeCircleAttack());
-        activeHand.StompAttack(stompHoverPosition);
-        yield return null;
+        while(life > 0){
+            yield return currentAttack = StartCoroutine(activeHand.StompAttack(stompHoverPosition));
+
+            yield return currentAttack = StartCoroutine(EyeCircleAttack());
+
+            yield return new WaitUntil(()=> hitFlag);
+            yield return StartCoroutine(RestartCycle());
+        }
+    }
+
+    IEnumerator RestartCycle(){
+        foreach(var eye in eyes){
+            yield return StartCoroutine(eye.ReturnToDefault());
+        }
+        hitFlag = false;
+
     }
 
     IEnumerator EyeCircleAttack(){

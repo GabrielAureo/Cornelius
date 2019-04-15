@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6433323097250263001}
   - component: {fileID: 9074243501881414260}
   - component: {fileID: 4063532175900340495}
-  - component: {fileID: 8432514179298041173}
+  - component: {fileID: 4058037164782456891}
   m_Layer: 13
   m_Name: TorsoBossHand
   m_TagString: Untagged
@@ -145,7 +145,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &8432514179298041173
+--- !u!114 &4058037164782456891
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,7 +154,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 7432650203731448175}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d36fbc908ffce0a42860cd0ebeb16412, type: 3}
+  m_Script: {fileID: 11500000, guid: e0205bdb8ded97d49b21b7cf292ca311, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   active: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 256

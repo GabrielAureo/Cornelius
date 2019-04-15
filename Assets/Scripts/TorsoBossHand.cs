@@ -1,6 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
+using System.Collections.Generic;
 
 public class TorsoBossHand : MonoBehaviour{
     SpriteRenderer sr;
@@ -28,11 +29,11 @@ public class TorsoBossHand : MonoBehaviour{
         sr.DOColor(Color.white, duration);
     }
 
-    public void StompAttack(Vector3 startPosition){
+    public IEnumerator StompAttack(Vector3 startPosition){
         anim.SetTrigger("Clutch");
         defaultStompPosition = startPosition;
-        transform.DOMove(defaultStompPosition,1f).onComplete+= () =>
-        StartCoroutine(StompRoutine(3));
+        yield return transform.DOMove(defaultStompPosition,1f).WaitForCompletion();
+        yield return StartCoroutine(StompRoutine(3));
     }
 
     IEnumerator StompRoutine(int times){

@@ -9,13 +9,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 783603422723556817}
+  - component: {fileID: 3133499561914625947}
+  - component: {fileID: 4788220381540019624}
   - component: {fileID: 7722465030046441656}
   - component: {fileID: 5566950344755109969}
   - component: {fileID: 3522094468017044215}
-  - component: {fileID: 3133499561914625947}
   - component: {fileID: 2757337945204508733}
   - component: {fileID: 8694751601723904563}
-  - component: {fileID: 6137593180237574708}
   m_Layer: 13
   m_Name: TorsoBossEye
   m_TagString: Untagged
@@ -37,6 +37,41 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3133499561914625947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2542236122173366553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9770880d6911d941a7d8b549e75b329, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coll: {fileID: 5566950344755109969}
+  speed: 1
+  sr: {fileID: 7722465030046441656}
+  rb: {fileID: 8694751601723904563}
+  freezeControl: {fileID: 3522094468017044215}
+  hurtControl: {fileID: 4788220381540019624}
+  paused: 0
+--- !u!114 &4788220381540019624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2542236122173366553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0205bdb8ded97d49b21b7cf292ca311, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  active: 1
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!212 &7722465030046441656
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -143,6 +178,17 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 4788220381540019624}
+        m_MethodName: RemoveLayer
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Player
+          m_BoolArgument: 1
+        m_CallState: 2
     m_TypeName: FreezeEvent, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
   onUnfreeze:
     m_PersistentCalls:
@@ -180,23 +226,30 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 4788220381540019624}
+        m_MethodName: RemoveLayer
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: TorsoBossBody
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4788220381540019624}
+        m_MethodName: AddLayer
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Player
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
---- !u!114 &3133499561914625947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2542236122173366553}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9770880d6911d941a7d8b549e75b329, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  coll: {fileID: 5566950344755109969}
-  speed: 1
-  paused: 0
 --- !u!114 &2757337945204508733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,7 +275,29 @@ MonoBehaviour:
       Culture=neutral, PublicKeyToken=null
   onThrow:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 4788220381540019624}
+        m_MethodName: AddLayer
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: TorsoBossBody
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4788220381540019624}
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   onFree:
@@ -256,16 +331,3 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &6137593180237574708
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2542236122173366553}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d36fbc908ffce0a42860cd0ebeb16412, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  active: 1

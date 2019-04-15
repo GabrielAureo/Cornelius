@@ -65,7 +65,7 @@ public class Freezable : Affectable, Rewindable{
         if(isAffectable){
             if(!active) bodyType = GetComponent<Rigidbody2D>().bodyType;
             StartCoroutine(StartFreeze());
-            FreezeAnimation();
+            if(useDefaultAnimation) FreezeAnimation();
             active = true;
             return true;
         }
@@ -103,7 +103,7 @@ public class Freezable : Affectable, Rewindable{
    public override bool Dispel(){
         if(TimerRoutine != null) StopCoroutine(TimerRoutine);
         GetComponent<Rigidbody2D>().bodyType = bodyType;
-        UnfreezeAnimation();
+        if(useDefaultAnimation) UnfreezeAnimation();
         onUnfreeze.Invoke();
         active = false;
         return true;

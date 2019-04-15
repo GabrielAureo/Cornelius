@@ -8,8 +8,7 @@ public class Player : MonoBehaviour
 {   
     enum State{ Normal, Casting, Grabbing }
     public float walkSpeed;
-    public float maxJumpHeight;
-    public float minJumpHeight;
+    public float jumpHeight;
     public float slowGravityScale;
 
     public float throwForce;
@@ -20,11 +19,12 @@ public class Player : MonoBehaviour
     public Grabber grabber;
     public SpriteRenderer spriteRenderer;
     public float invulnerabilityDuration;
+    public Collider2D footCollider;
+    public ContactFilter2D groundFilter;
+    public ContactFilter2D enemyFilter;
 
     bool invulnerable;
     bool canJump = true;
-    bool releasedJump = false;
-    bool jumping = false;
     float jumpForce;
     float defaultGravityScale;
 
@@ -41,7 +41,7 @@ public class Player : MonoBehaviour
 
     void OnValidate(){
         if(rb== null) rb = GetComponent<Rigidbody2D>();
-        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * maxJumpHeight) * rb.mass;
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
     }
     
     // Start is called before the first frame update
@@ -51,14 +51,12 @@ public class Player : MonoBehaviour
         source = GetComponent<AudioSource>();
         anim = GetComponentInChildren<Animator>();
         defaultGravityScale = rb.gravityScale;
-        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * maxJumpHeight) * rb.mass;
+        jumpForce = Mathf.Sqrt(2f * Physics2D.gravity.magnitude * rb.gravityScale * jumpHeight) * rb.mass;
     }
     #region Basic Actions
     public void Jump(){
-        jumping = true;
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.AddForce(jumpForce * Vector2.up, ForceMode2D.Impulse);
-        canJump = false;
     }
     void Walk(float direction){
         rb.velocity = new Vector2(walkSpeed * direction, rb.velocity.y);
@@ -83,9 +81,9 @@ public class Player : MonoBehaviour
 
     void Movement(){
         if(Input.GetKeyDown(KeyCode.Space) && canJump){
-            releasedJump = false;
             Jump();
         }
+        
         var hor = Input.GetAxisRaw("Horizontal");
         if(hor != 0){
             var scale = transform.localScale;
@@ -160,18 +158,34 @@ public class Player : MonoBehaviour
     public void AllowJump(){
         canJump = true;
     }
-    void CheckBellow(Collision2D coll){
+
+    void CheckCollision(Collision2D coll){
         //collision from bellow
-        if(Vector3.Dot(coll.GetContact(0).normal, Vector3.up) > 0.5){
+        var arr = new ContactPoint2D[8];
+        int contacts = coll.GetContacts(arr);
+        bool hitBellow = false;
+        foreach(var contact in arr){
+            if(Vector3.Dot(contact.normal, Vector3.up) > 0.5){
+                //print(contact);
+                hitBellow = true;
+                break;
+            }
+        }
+        if(hitBellow){
             if(coll.gameObject.tag == "Ground" && coll.enabled){
                 canJump = true;
-                jumping = false;
             }else{
                 var stompable = coll.gameObject.GetComponent<Stompable>();
                 if(stompable != null){
                     Jump();
                     stompable.Stomp();
                 }
+            }
+        }else{
+            var hurtable = coll.gameObject.GetComponent<HurtCollider>();
+            if(hurtable!= null){
+                TakeDamage();
+                hurtable.onCollision.Invoke();
             }
         }
     }
@@ -193,24 +207,45 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        CheckBellow();
+
         if(state != State.Casting){
             Movement();
            
         }
         Attack();
-        
     }
 
-    void OnCollisionEnter2D(Collision2D coll){
-        CheckBellow(coll);   
-    }
 
-    void OnCollisionStay2D(Collision2D coll){
-        //Checks if the player has jumped and cast magic at the same time
-        if(!canJump && state == State.Casting){
-            CheckBellow(coll);
+    void CheckBellow(){
+        if(footCollider.IsTouching(groundFilter)){
+            canJump = true;
+        }else{
+            canJump = false;
+        }
+
+        var enemy = new Collider2D[1];
+        if(footCollider.OverlapCollider(enemyFilter,enemy) > 0){
+            print("a");
+            var stompable = enemy[0].GetComponent<Stompable>();
+            if(stompable != null){
+                stompable.Stomp();
+                Jump();
+            }
         }
     }
+
+    /*void OnCollisionStay2D(Collision2D coll){
+        CheckCollision(coll);   
+    }
+
+    When the player presses the cast button immediatly after the jump,
+    the canJump flag is consumed without leaving the ground
+    void OnCollisionExit2D(Collision2D coll){
+        if(coll.gameObject.tag == "Ground"){
+            canJump = false;
+        }
+    }*/
 
     void OnDrawGizmosSelected(){
         Gizmos.color = Color.red;

@@ -4,14 +4,23 @@ using System.Collections;
 
 public class TorsoBossProjectile: MonoBehaviour{
     Rigidbody2D rb;
+    SpriteRenderer spriteRenderer;
     public float speed;
     public float changeDirectionFrquency;
 
-    void Start(){
+    void Awake(){
         rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+    }
+    void OnEnable(){
+        var col = spriteRenderer.color;
+        spriteRenderer.color = new Color(col.r, col.g, col.b, 0f);
+        spriteRenderer.DOFade(1f,.2f);
+
         rb.velocity = transform.up * speed;
         InvokeRepeating("ChangeDirection",0f, 1.5f);
         StartCoroutine(UpdateVelocity());
+        StartCoroutine(DeathCounter());
     }
 
     void ChangeDirection(){
@@ -22,5 +31,11 @@ public class TorsoBossProjectile: MonoBehaviour{
             rb.velocity = transform.up * speed;
             yield return null;
         }
+    }
+
+    IEnumerator DeathCounter(){
+        yield return new WaitForSeconds(5f);
+        yield return spriteRenderer.DOFade(1f, 0.2f);
+        SimplePool.Despawn(gameObject);
     }
 }
